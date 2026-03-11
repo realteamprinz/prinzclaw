@@ -1,0 +1,101 @@
+# agent.yaml — OpenClaw Agent Registration for prinzclaw
+# This file declares prinzclaw as an independent agent in the OpenClaw ecosystem.
+
+agent:
+  name: "prinzclaw"
+  version: "1.0.0"
+  description: >
+    Truth-strike agent. Monitors public statements by powerful entities
+    (CEOs, politicians, institutions), detects lies and contradictions
+    using public evidence, and generates copy-paste counter-strikes
+    following the prinzclaw v1.0 standard.
+  author: "Louie Grant Prinz"
+  repository: "https://github.com/realteamprinz/prinzclaw"
+  license: "MIT"
+
+  # Agent type: standalone with OpenClaw-compatible gateway
+  type: "standalone"
+  runtime: "python3"
+
+  # Gateway configuration (OpenClaw protocol)
+  gateway:
+    protocol: "openclaw-v1"
+    host: "0.0.0.0"
+    port: 8100
+    health_endpoint: "/health"
+    endpoints:
+      - path: "/analyze"
+        method: "POST"
+        description: "Analyze a public statement and generate a Strike"
+        input:
+          statement: "string (required) — The public statement to analyze"
+          target: "string (optional) — Name of the person/entity"
+          date: "string (optional) — Date the statement was made"
+          style: "string (optional) — surgical|prosecutor|street|broadcast"
+        output: "prinzclaw v1.0 Strike JSON"
+      - path: "/scan"
+        method: "POST"
+        description: "Start scanning a target's public channels"
+        input:
+          target_name: "string — Name of the target"
+          twitter_handle: "string (optional) — Twitter/X handle"
+          keywords: "array of strings (optional) — Keywords to watch"
+        output: "{ status: 'scanning', target_id: '...' }"
+      - path: "/queue"
+        method: "GET"
+        description: "Get pending Strike drafts awaiting human review"
+        output: "Array of Strike JSON objects with reviewed=false"
+      - path: "/approve/{strike_id}"
+        method: "POST"
+        description: "Approve a Strike draft for publication"
+        output: "{ published: true, strike_id: '...' }"
+      - path: "/archive"
+        method: "GET"
+        description: "Get all published Strikes"
+        output: "Array of Strike JSON objects"
+      - path: "/stats"
+        method: "GET"
+        description: "Get agent statistics"
+        output: "{ total_strikes, unique_targets, verdicts }"
+
+  # Capabilities — what other agents can invoke
+  capabilities:
+    - "statement_analysis"
+    - "evidence_search"
+    - "strike_generation"
+    - "target_monitoring"
+    - "archive_query"
+    - "contradiction_detection"
+
+  # Invoke examples for other OpenClaw agents
+  invoke_examples:
+    - description: "Analyze a CEO statement"
+      input:
+        statement: "Our platform has never and will never share user data with third parties."
+        target: "CEO of ExampleCorp"
+        date: "2026-01-15"
+      output: "Strike JSON with verdict SPINNING, evidence from SEC filings and FTC records"
+
+    - description: "Monitor a politician on Twitter"
+      input:
+        target_name: "Senator Example"
+        twitter_handle: "@senatorexample"
+        keywords: ["economy", "jobs", "inflation", "promise"]
+      output: "Agent begins scanning. Strike drafts appear in /queue endpoint."
+
+  # Dependencies
+  dependencies:
+    python: ">=3.10"
+    ai_provider: "gemini|anthropic|openai"
+    database: "sqlite3"
+    optional:
+      - "twitter_api (for automated scanning)"
+      - "rss_parser (for news monitoring)"
+
+  # Compliance
+  compliance:
+    rule_zero: "NEVER fabricate evidence"
+    target_policy: "Punch up, never down. Only public figures with power."
+    review_policy: "Human review REQUIRED before publication (default)"
+    coherence_window: "11 months"
+    signature: "FORGED WITH PRINZCLAW"

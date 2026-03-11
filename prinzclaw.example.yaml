@@ -1,0 +1,56 @@
+# prinzclaw.yaml — Agent Configuration
+# Copy this to prinzclaw.yaml and edit with your settings
+
+# AI Provider
+ai:
+  provider: "gemini"  # gemini | anthropic | openai
+  model: "gemini-2.5-flash"
+  api_key_env: "GEMINI_API_KEY"  # Environment variable name (never hardcode keys)
+
+# Scan Configuration (Stage T — Tension)
+scan:
+  platforms:
+    - twitter
+    - rss
+  scan_interval_minutes: 15
+  min_claim_confidence: 0.7
+  coherence_window_months: 11  # The 11-month window
+
+# Targets to Monitor
+targets:
+  - name: "Example Target"
+    type: "person"
+    role: "CEO of Example Corp"
+    twitter_handle: "@example"
+    keywords:
+      - "revenue"
+      - "growth"
+      - "safe"
+      - "secure"
+      - "promise"
+      - "never"
+      - "always"
+      - "guarantee"
+
+# Strike Style
+style: "surgical"  # surgical | prosecutor | street | broadcast
+
+# Output Configuration (Stage O — Observer)
+output:
+  mode: "semi_auto"  # manual | semi_auto | full_auto
+  review_required: true
+  publish_to:
+    - local_db
+    # - twitter          # Uncomment to enable auto-publish
+    # - prinzit_archive  # Uncomment to submit to public archive
+  local_db_path: "./data/strikes.db"
+
+# prinzit.ai Archive (Optional)
+archive:
+  enabled: false
+  api_url: "https://prinzit.ai/api/v1"
+
+# Logging
+logging:
+  level: "INFO"
+  file: "./logs/prinzclaw.log"

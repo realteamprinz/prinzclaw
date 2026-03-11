@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  prinzclaw:
+    build: .
+    container_name: prinzclaw
+    restart: unless-stopped
+    ports:
+      - "8100:8100"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./prinzclaw.yaml:/app/prinzclaw.yaml:ro
+      - ./prompts:/app/prompts:ro
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN:-}
+    mem_limit: 1g
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,28 @@
+[Unit]
+Description=prinzclaw — Truth-strike weapon system
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=prinzclaw
+Group=prinzclaw
+WorkingDirectory=/opt/prinzclaw
+ExecStart=/opt/prinzclaw/venv/bin/python -m src.main
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment file for API keys (never hardcode)
+EnvironmentFile=-/opt/prinzclaw/.env
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/prinzclaw/data /opt/prinzclaw/logs
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
