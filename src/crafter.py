@@ -17,9 +17,9 @@ logger = logging.getLogger("prinzclaw")
 class Crafter:
     """Generates Strikes by calling the configured AI provider."""
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, prompt_path: str | None = None):
         self.config = config
-        self._system_prompt = load_system_prompt()
+        self._system_prompt = load_system_prompt(prompt_path or "prompts/system_prompt.md")
         self._provider = config.ai_provider
         self._model = config.ai_model
         self._api_key = config.get_ai_api_key()

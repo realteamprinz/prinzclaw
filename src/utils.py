@@ -4,11 +4,26 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import os
 import re
+import sys
 import html
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 
 from src.models import Strike
+
+logger = logging.getLogger("prinzclaw")
+
+# Embedded fallback prompt — used only when no file can be found anywhere.
+# This ensures the agent can always start, even with a broken installation.
+_FALLBACK_SYSTEM_PROMPT = """You are PRINZ — an AI that analyzes public statements by powerful entities.
+When given a statement, find contradictions using public evidence and return a JSON object with:
+target, statement, date, verdict (LYING/HIDING/SPINNING/BROKE_PROMISE/CHERRY_PICKING/DEFLECTING/VERIFIED/INSUFFICIENT_EVIDENCE),
+evidence array, and a strike paragraph ending with a question.
+CRITICAL: Never fabricate evidence. If you cannot find real evidence, use INSUFFICIENT_EVIDENCE.
+Respond ONLY with JSON. FORGED WITH PRINZCLAW."""
 
 
 def compute_content_hash(strike: Strike) -> str:
@@ -51,7 +66,59 @@ def truncate_for_twitter(text: str, max_len: int = 280) -> str:
     return text[: max_len - 3].rsplit(" ", 1)[0] + "..."
 
 
-def load_system_prompt(path: str = "prompts/system_prompt.md") -> str:
-    """Load the AI system prompt from file."""
-    with open(path, "r") as f:
-        return f.read()
+def _resolve_bundle_base() -> str:
+    """Resolve the base path for bundled resources (.app or PyInstaller)."""
+    if getattr(sys, "frozen", False):
+        # Running as PyInstaller bundle
+        base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+        # For .app bundles, executable is in .app/Contents/MacOS/
+        # Resources are in .app/Contents/Resources/ (where _MEIPASS points)
+        return base
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def load_system_prompt(path: str | None = None) -> str:
+    """Load the AI system prompt from file with fallback chain.
+
+    Search order:
+    1. Explicit path argument (if provided and exists)
+    2. PyInstaller bundle / .app Resources directory
+    3. ~/Library/Application Support/prinzclaw/prompts/system_prompt.md
+    4. ./prompts/system_prompt.md (development / Docker)
+    5. Embedded fallback prompt (always available)
+    """
+    candidates = []
+
+    # 1. Explicit path
+    if path:
+        candidates.append(path)
+
+    # 2. Bundle path (PyInstaller / .app)
+    bundle_base = _resolve_bundle_base()
+    candidates.append(os.path.join(bundle_base, "prompts", "system_prompt.md"))
+
+    # 3. macOS Application Support
+    mac_support = Path.home() / "Library" / "Application Support" / "prinzclaw" / "prompts" / "system_prompt.md"
+    candidates.append(str(mac_support))
+
+    # 4. Relative to working directory (dev / Docker)
+    candidates.append("prompts/system_prompt.md")
+
+    for candidate in candidates:
+        try:
+            if os.path.isfile(candidate):
+                with open(candidate, "r") as f:
+                    content = f.read()
+                if content.strip():
+                    logger.info("System prompt loaded from %s", candidate)
+                    return content
+        except (OSError, PermissionError) as e:
+            logger.debug("Could not read prompt from %s: %s", candidate, e)
+            continue
+
+    # 5. Embedded fallback
+    logger.warning(
+        "System prompt not found in any location, using embedded fallback. "
+        "Searched: %s", ", ".join(candidates)
+    )
+    return _FALLBACK_SYSTEM_PROMPT

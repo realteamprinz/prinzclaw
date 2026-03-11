@@ -164,22 +164,15 @@ def create_mac_gateway() -> None:
     scanner = Scanner(config)
     analyzer = Analyzer(config)
 
-    # Patch prompt loading to use macOS path
-    import src.utils
-    original_load = src.utils.load_system_prompt
+    # Pass the macOS prompt path directly to the Crafter
+    mac_prompt = str(paths.PROMPTS_DIR / "system_prompt.md")
+    logger.info("Loading system prompt from %s", mac_prompt)
 
-    def mac_load_prompt(path: str = None) -> str:
-        mac_path = str(paths.PROMPTS_DIR / "system_prompt.md")
-        if Path(mac_path).exists():
-            return original_load(mac_path)
-        return original_load(path or "prompts/system_prompt.md")
-
-    src.utils.load_system_prompt = mac_load_prompt
-
-    crafter = Crafter(config)
+    crafter = Crafter(config, prompt_path=mac_prompt)
     publisher = Publisher(config, db)
 
     gateway = MacGateway(config, db, scanner, analyzer, crafter, publisher)
 
     logger.info("macOS gateway starting on 127.0.0.1:8100")
-    web.run_app(gateway.app, host="127.0.0.1", port=8100, print=None)
+    # handle_signals=False because we run in a background thread (main = rumps)
+    web.run_app(gateway.app, host="127.0.0.1", port=8100, print=None, handle_signals=False)
