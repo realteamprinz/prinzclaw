@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>prinzclaw</title>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --border: #222;
+  --red: #e63946;
+  --red-dim: #8b1a22;
+  --text: #e8e8e8;
+  --text-dim: #777;
+  --green: #2ecc71;
+  --yellow: #f1c40f;
+  --blue: #3498db;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--red);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 18px;
+  color: white;
+}
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--green);
+}
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.container { max-width: 1080px; margin: 0 auto; padding: 24px 32px; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.stat-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+.stat-value { font-size: 32px; font-weight: 700; margin-top: 4px; }
+.stat-value.red { color: var(--red); }
+
+section { margin-bottom: 32px; }
+h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+h2 .count {
+  background: var(--red);
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.strike-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 12px;
+}
+.strike-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.target-name { font-weight: 700; font-size: 15px; }
+.verdict-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+}
+.verdict-LYING { background: #e63946; color: white; }
+.verdict-HIDING { background: #8b5cf6; color: white; }
+.verdict-SPINNING { background: #f59e0b; color: black; }
+.verdict-BROKE_PROMISE { background: #ef4444; color: white; }
+.verdict-CHERRY_PICKING { background: #f97316; color: white; }
+.verdict-DEFLECTING { background: #6366f1; color: white; }
+.verdict-VERIFIED { background: #22c55e; color: white; }
+.verdict-INSUFFICIENT_EVIDENCE { background: #6b7280; color: white; }
+
+.statement { color: var(--text-dim); font-size: 13px; margin-bottom: 12px; font-style: italic; }
+.strike-text { font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
+.strike-meta { display: flex; gap: 16px; font-size: 11px; color: var(--text-dim); }
+
+.approve-btn {
+  background: var(--red);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.approve-btn:hover { background: #c62d3a; }
+
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 10px 20px;
+  font-size: 14px;
+  color: var(--text-dim);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  background: none;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+.tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+.footer {
+  text-align: center;
+  padding: 32px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+}
+.footer strong { color: var(--red); }
+
+/* Analyze form */
+.analyze-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group textarea, .form-group select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+}
+.form-group textarea { min-height: 80px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">P</div>
+    prinzclaw
+  </div>
+  <div class="status-badge">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Connecting...</span>
+  </div>
+</header>
+
+<div class="container">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Strikes</div>
+      <div class="stat-value red" id="totalStrikes">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Unique Targets</div>
+      <div class="stat-value" id="uniqueTargets">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pending Review</div>
+      <div class="stat-value" id="pendingReview">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Agent Version</div>
+      <div class="stat-value" style="font-size:20px" id="agentVersion">—</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('queue')">Review Queue</button>
+    <button class="tab" onclick="showTab('archive')">Archive</button>
+    <button class="tab" onclick="showTab('analyze')">Analyze</button>
+  </div>
+
+  <section id="tab-queue"></section>
+  <section id="tab-archive" style="display:none"></section>
+  <section id="tab-analyze" style="display:none">
+    <div class="analyze-form">
+      <div class="form-group">
+        <label>Statement to Analyze</label>
+        <textarea id="analyzeStatement" placeholder="Paste the public statement here..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Target Name</label>
+          <input id="analyzeTarget" placeholder="e.g. CEO of ExampleCorp">
+        </div>
+        <div class="form-group">
+          <label>Target Role</label>
+          <input id="analyzeRole" placeholder="e.g. CEO">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Source URL</label>
+          <input id="analyzeSource" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label>Style</label>
+          <select id="analyzeStyle">
+            <option value="surgical">Surgical</option>
+            <option value="prosecutor">Prosecutor</option>
+            <option value="street">Street</option>
+            <option value="broadcast">Broadcast</option>
+          </select>
+        </div>
+      </div>
+      <button class="approve-btn" onclick="submitAnalysis()">FORGE STRIKE</button>
+      <div id="analyzeResult" style="margin-top:16px"></div>
+    </div>
+  </section>
+</div>
+
+<div class="footer">
+  <strong>FORGED WITH PRINZCLAW</strong> — They don't want you to see. We show you. You hit back.
+</div>
+
+<script>
+const API = 'http://localhost:8100';
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[id^="tab-"]').forEach(s => s.style.display = 'none');
+  document.getElementById('tab-' + name).style.display = '';
+  event.target.classList.add('active');
+  if (name === 'queue') loadQueue();
+  if (name === 'archive') loadArchive();
+}
+
+async function api(path, opts) {
+  try {
+    const r = await fetch(API + path, opts);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+async function loadStats() {
+  const d = await api('/stats');
+  if (d) {
+    document.getElementById('totalStrikes').textContent = d.total_strikes || 0;
+    document.getElementById('uniqueTargets').textContent = d.unique_targets || 0;
+    document.getElementById('pendingReview').textContent = d.pending_review || 0;
+    document.getElementById('agentVersion').textContent = d.version || '1.0.0';
+    document.getElementById('statusDot').style.background = '#2ecc71';
+    document.getElementById('statusText').textContent = 'Operational';
+  } else {
+    document.getElementById('statusDot').style.background = '#e63946';
+    document.getElementById('statusText').textContent = 'Offline';
+  }
+}
+
+function renderStrike(s, showApprove) {
+  const evidence = (s.evidence || []).map(e =>
+    '<div style="font-size:12px;color:#999;margin:2px 0">• ' + esc(e.claim) + ' (' + esc(e.source) + ')</div>'
+  ).join('');
+  return '<div class="strike-card">' +
+    '<div class="strike-header">' +
+      '<span class="target-name">' + esc(s.target?.name || 'Unknown') + '</span>' +
+      '<span class="verdict-badge verdict-' + s.verdict + '">' + s.verdict + '</span>' +
+    '</div>' +
+    '<div class="statement">"' + esc(s.statement?.text || '') + '"</div>' +
+    (evidence ? '<div style="margin-bottom:12px">' + evidence + '</div>' : '') +
+    '<div class="strike-text">' + esc(s.strike || '') + '</div>' +
+    '<div class="strike-meta">' +
+      '<span>' + (s.timestamp || '').slice(0, 16) + '</span>' +
+      '<span>ID: ' + (s.report_id || '').slice(0, 8) + '...</span>' +
+      '<span>Hash: ' + (s.content_hash || '').slice(0, 12) + '...</span>' +
+    '</div>' +
+    (showApprove ? '<button class="approve-btn" onclick="approveStrike(\'' + s.report_id + '\')">APPROVE</button>' : '') +
+  '</div>';
+}
+
+async function loadQueue() {
+  const d = await api('/queue');
+  const el = document.getElementById('tab-queue');
+  if (!d || !d.pending || d.pending.length === 0) {
+    el.innerHTML = '<div class="empty-state">No strikes pending review</div>';
+  } else {
+    el.innerHTML = '<h2>Pending Review <span class="count">' + d.count + '</span></h2>' +
+      d.pending.map(s => renderStrike(s, true)).join('');
+  }
+}
+
+async function loadArchive() {
+  const d = await api('/archive');
+  const el = document.getElementById('tab-archive');
+  if (!d || !d.strikes || d.strikes.length === 0) {
+    el.innerHTML = '<div class="empty-state">No published strikes yet</div>';
+  } else {
+    el.innerHTML = '<h2>Published Strikes <span class="count">' + d.count + '</span></h2>' +
+      d.strikes.map(s => renderStrike(s, false)).join('');
+  }
+}
+
+async function approveStrike(id) {
+  await api('/approve/' + id, { method: 'POST' });
+  loadQueue();
+  loadStats();
+}
+
+async function submitAnalysis() {
+  const btn = event.target;
+  btn.textContent = 'FORGING...';
+  btn.disabled = true;
+  const d = await api('/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      statement: document.getElementById('analyzeStatement').value,
+      target: document.getElementById('analyzeTarget').value,
+      role: document.getElementById('analyzeRole').value,
+      source_url: document.getElementById('analyzeSource').value,
+      style: document.getElementById('analyzeStyle').value,
+    }),
+  });
+  btn.textContent = 'FORGE STRIKE';
+  btn.disabled = false;
+  const el = document.getElementById('analyzeResult');
+  if (d && d.verdict) {
+    el.innerHTML = renderStrike(d, false);
+    loadStats();
+  } else if (d && d.error) {
+    el.innerHTML = '<div style="color:#e63946;margin-top:12px">' + esc(d.error) + '</div>';
+  } else {
+    el.innerHTML = '<div style="color:#e63946;margin-top:12px">Agent unreachable</div>';
+  }
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// Init
+loadStats();
+loadQueue();
+setInterval(loadStats, 10000);
+</script>
+</body>
+</html>

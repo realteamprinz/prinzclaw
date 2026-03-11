@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>prinzclaw — Setup</title>
+<style>
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --border: #222;
+  --red: #e63946;
+  --text: #e8e8e8;
+  --text-dim: #777;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.setup-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px;
+  width: 480px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--red);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 22px;
+  color: white;
+}
+.subtitle {
+  color: var(--text-dim);
+  font-size: 14px;
+  margin-bottom: 32px;
+}
+.step { display: none; }
+.step.active { display: block; }
+.form-group { margin-bottom: 20px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-group input, .form-group select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+}
+.provider-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.provider-card {
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.provider-card:hover { border-color: #444; }
+.provider-card.selected { border-color: var(--red); }
+.provider-card .name { font-weight: 700; font-size: 14px; margin-top: 8px; }
+.provider-card .model { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+.btn-row { display: flex; justify-content: space-between; margin-top: 24px; }
+.btn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}
+.btn-primary { background: var(--red); color: white; }
+.btn-primary:hover { background: #c62d3a; }
+.btn-secondary { background: var(--bg); color: var(--text-dim); border: 1px solid var(--border); }
+.btn-skip { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 13px; }
+
+.step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.dot.active { background: var(--red); }
+
+.success {
+  text-align: center;
+  padding: 20px 0;
+}
+.success .checkmark {
+  width: 64px;
+  height: 64px;
+  background: var(--red);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+  margin: 0 auto 16px;
+}
+.error { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="setup-box">
+  <div class="logo">
+    <div class="logo-icon">P</div>
+    prinzclaw
+  </div>
+  <p class="subtitle">First-time setup — takes 30 seconds</p>
+
+  <div class="step-dots">
+    <div class="dot active" id="dot-0"></div>
+    <div class="dot" id="dot-1"></div>
+    <div class="dot" id="dot-2"></div>
+  </div>
+
+  <!-- Step 1: AI Provider -->
+  <div class="step active" id="step-0">
+    <h3 style="margin-bottom:16px">Choose your AI provider</h3>
+    <div class="provider-cards">
+      <div class="provider-card selected" onclick="selectProvider('gemini', this)">
+        <div style="font-size:28px">&#9670;</div>
+        <div class="name">Gemini</div>
+        <div class="model">gemini-2.5-flash</div>
+      </div>
+      <div class="provider-card" onclick="selectProvider('anthropic', this)">
+        <div style="font-size:28px">&#9651;</div>
+        <div class="name">Anthropic</div>
+        <div class="model">claude-sonnet-4-6</div>
+      </div>
+      <div class="provider-card" onclick="selectProvider('openai', this)">
+        <div style="font-size:28px">&#9679;</div>
+        <div class="name">OpenAI</div>
+        <div class="model">gpt-4o</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <div></div>
+      <button class="btn btn-primary" onclick="nextStep()">Continue</button>
+    </div>
+  </div>
+
+  <!-- Step 2: API Key -->
+  <div class="step" id="step-1">
+    <h3 style="margin-bottom:16px">Enter your API key</h3>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">
+      Your key is stored securely in the macOS Keychain. It never leaves your machine.
+    </p>
+    <div class="form-group">
+      <label id="keyLabel">GEMINI API KEY</label>
+      <input type="password" id="apiKeyInput" placeholder="Paste your API key here">
+      <div class="error" id="keyError">API key is required</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button class="btn btn-primary" onclick="nextStep()">Continue</button>
+    </div>
+  </div>
+
+  <!-- Step 3: First Target (Optional) -->
+  <div class="step" id="step-2">
+    <h3 style="margin-bottom:16px">Add a target to monitor</h3>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px">
+      Optional. You can add targets later from the dashboard.
+    </p>
+    <div class="form-group">
+      <label>Target Name</label>
+      <input id="targetName" placeholder="e.g. CEO of ExampleCorp">
+    </div>
+    <div class="form-group">
+      <label>Twitter/X Handle</label>
+      <input id="targetHandle" placeholder="@example">
+    </div>
+    <div class="form-group">
+      <label>Keywords to Watch</label>
+      <input id="targetKeywords" placeholder="revenue, growth, safe, promise">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <div>
+        <button class="btn-skip" onclick="finishSetup(true)">Skip</button>
+        <button class="btn btn-primary" onclick="finishSetup(false)">Finish Setup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done -->
+  <div class="step" id="step-done">
+    <div class="success">
+      <div class="checkmark">&#10003;</div>
+      <h3>prinzclaw is ready</h3>
+      <p style="color:var(--text-dim);font-size:14px;margin-top:8px">
+        The agent is running on localhost:8100
+      </p>
+      <button class="btn btn-primary" style="margin-top:24px" onclick="window.location.href='/'">
+        Open Dashboard
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8100';
+let currentStep = 0;
+let selectedProvider = 'gemini';
+
+const providerModels = {
+  gemini: { env: 'GEMINI_API_KEY', model: 'gemini-2.5-flash', label: 'GEMINI API KEY' },
+  anthropic: { env: 'ANTHROPIC_API_KEY', model: 'claude-sonnet-4-6', label: 'ANTHROPIC API KEY' },
+  openai: { env: 'OPENAI_API_KEY', model: 'gpt-4o', label: 'OPENAI API KEY' },
+};
+
+function selectProvider(name, el) {
+  selectedProvider = name;
+  document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function nextStep() {
+  if (currentStep === 1) {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) {
+      document.getElementById('keyError').style.display = 'block';
+      return;
+    }
+    document.getElementById('keyError').style.display = 'none';
+  }
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  currentStep++;
+  const next = document.getElementById('step-' + currentStep);
+  if (next) {
+    next.classList.add('active');
+    updateDots();
+    if (currentStep === 1) {
+      document.getElementById('keyLabel').textContent = providerModels[selectedProvider].label;
+    }
+  }
+}
+
+function prevStep() {
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  currentStep--;
+  document.getElementById('step-' + currentStep).classList.add('active');
+  updateDots();
+}
+
+function updateDots() {
+  for (let i = 0; i < 3; i++) {
+    document.getElementById('dot-' + i).classList.toggle('active', i <= currentStep);
+  }
+}
+
+async function finishSetup(skip) {
+  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  const data = {
+    provider: selectedProvider,
+    model: providerModels[selectedProvider].model,
+    api_key: apiKey,
+  };
+
+  if (!skip) {
+    const name = document.getElementById('targetName').value.trim();
+    if (name) {
+      data.target = {
+        name: name,
+        twitter_handle: document.getElementById('targetHandle').value.trim(),
+        keywords: document.getElementById('targetKeywords').value.split(',').map(k => k.trim()).filter(Boolean),
+      };
+    }
+  }
+
+  try {
+    await fetch(API + '/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch(e) { /* Agent handles it */ }
+
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  document.getElementById('step-done').classList.add('active');
+  document.querySelector('.step-dots').style.display = 'none';
+}
+</script>
+</body>
+</html>
