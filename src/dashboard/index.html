@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>prinzclaw - Promise Tracker</title>
+  <style>
+    :root {
+      --bg-primary: #0d0d0d;
+      --bg-secondary: #161616;
+      --bg-tertiary: #1f1f1f;
+      --bg-card: #242424;
+      --text-primary: #f5f5f5;
+      --text-secondary: #a0a0a0;
+      --text-muted: #666666;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-yellow: #eab308;
+      --accent-blue: #3b82f6;
+      --accent-purple: #a855f7;
+      --border-color: #2a2a2a;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    .logo-text {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-text span {
+      color: var(--accent-green);
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-red);
+    }
+
+    .status-dot.connected {
+      background: var(--accent-green);
+    }
+
+    /* Navigation */
+    .nav {
+      background: var(--bg-secondary);
+      padding: 0 2rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .nav-tab {
+      padding: 0.75rem 1.5rem;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-tab.active {
+      color: var(--accent-green);
+      border-bottom-color: var(--accent-green);
+    }
+
+    /* Main Content */
+    .main {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-value.green { color: var(--accent-green); }
+    .stat-value.red { color: var(--accent-red); }
+    .stat-value.yellow { color: var(--accent-yellow); }
+    .stat-value.blue { color: var(--accent-blue); }
+
+    /* Score Badge */
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .score-badge.high {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--accent-green);
+      border: 2px solid var(--accent-green);
+    }
+
+    .score-badge.medium {
+      background: rgba(234, 179, 8, 0.15);
+      color: var(--accent-yellow);
+      border: 2px solid var(--accent-yellow);
+    }
+
+    .score-badge.low {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 2px solid var(--accent-red);
+    }
+
+    /* Entity List */
+    .entity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .entity-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      transition: background 0.2s;
+      cursor: pointer;
+    }
+
+    .entity-item:hover {
+      background: var(--bg-card);
+    }
+
+    .entity-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .entity-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .entity-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .entity-stats {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Promise List */
+    .promise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .promise-item {
+      padding: 0.75rem;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+
+    .promise-text {
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .promise-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Strike Card */
+    .strike-card {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-left: 4px solid var(--accent-red);
+    }
+
+    .strike-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .strike-target {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .strike-verdict {
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .strike-verdict.broke {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--accent-red);
+    }
+
+    .strike-verdict.kept {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--accent-green);
+    }
+
+    .strike-verdict.partial {
+      background: rgba(234, 179, 8, 0.2);
+      color: var(--accent-yellow);
+    }
+
+    .strike-summary {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+    }
+
+    .strike-evidence {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding: 0.5rem;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      margin-bottom: 0.75rem;
+    }
+
+    .strike-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent-green);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background: #16a34a;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid var(--accent-red);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent-green);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea.form-input {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent-green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.75rem;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      margin-top: 0.5rem;
+      box-shadow: var(--shadow);
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--accent-green);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--accent-red);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 1rem;
+      }
+
+      .nav {
+        padding: 0 1rem;
+        overflow-x: auto;
+      }
+
+      .main {
+        padding: 1rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">prinz<span>claw</span></div>
+    </div>
+    <div class="connection-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting...</span>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <button class="nav-tab active" data-view="deals">DEAL Board</button>
+    <button class="nav-tab" data-view="queue">Strike Queue</button>
+    <button class="nav-tab" data-view="archive">Archive</button>
+    <button class="nav-tab" data-view="scan">Scan</button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- DEAL Board View -->
+    <section class="view active" id="dealsView">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Entities</div>
+          <div class="stat-value blue" id="totalEntities">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Promises Kept</div>
+          <div class="stat-value green" id="totalKept">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Promises Broken</div>
+          <div class="stat-value red" id="totalBroken">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg. Score</div>
+          <div class="stat-value yellow" id="avgScore">0%</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Tracked Entities</h2>
+        </div>
+        <div class="entity-list" id="entityList">
+          <div class="loading">
+            <div class="spinner"></div>
+            Loading entities...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Strike Queue View -->
+    <section class="view" id="queueView">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Pending Review</div>
+          <div class="stat-value yellow" id="queuePending">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Approved</div>
+          <div class="stat-value green" id="queueApproved">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Rejected</div>
+          <div class="stat-value red" id="queueRejected">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Published</div>
+          <div class="stat-value blue" id="queuePublished">0</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Pending Strikes</h2>
+          <button class="btn btn-secondary" onclick="loadQueue()">Refresh</button>
+        </div>
+        <div id="queueList">
+          <div class="loading">
+            <div class="spinner"></div>
+            Loading queue...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Archive View -->
+    <section class="view" id="archiveView">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Published Strikes Archive</h2>
+          <button class="btn btn-secondary" onclick="loadArchive()">Refresh</button>
+        </div>
+        <div id="archiveList">
+          <div class="loading">
+            <div class="spinner"></div>
+            Loading archive...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scan View -->
+    <section class="view" id="scanView">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Scan New Promise</h2>
+        </div>
+        <form id="scanForm">
+          <div class="form-group">
+            <label class="form-label">Entity Handle</label>
+            <input type="text" class="form-input" id="entityHandle" placeholder="@username or entity_id" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Entity Name (Optional)</label>
+            <input type="text" class="form-input" id="entityName" placeholder="Display name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Promise Quote</label>
+            <textarea class="form-input" id="promiseQuote" placeholder="The exact promise statement..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Source URL (Optional)</label>
+            <input type="url" class="form-input" id="sourceUrl" placeholder="https://...">
+          </div>
+          <button type="submit" class="btn btn-primary">Scan Promise</button>
+        </form>
+      </div>
+
+      <div class="card" id="scanResult" style="display: none;">
+        <div class="card-header">
+          <h2 class="card-title">Scan Result</h2>
+        </div>
+        <div id="scanResultContent"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // API Base URL
+    const API_BASE = window.location.origin;
+
+    // WebSocket
+    let ws = null;
+    let wsReconnectTimeout = null;
+
+    // State
+    let currentView = 'deals';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      initNavigation();
+      initWebSocket();
+      loadDeals();
+    });
+
+    // Navigation
+    function initNavigation() {
+      const tabs = document.querySelectorAll('.nav-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const view = tab.dataset.view;
+          switchView(view);
+        });
+      });
+    }
+
+    function switchView(view) {
+      currentView = view;
+
+      // Update tabs
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.view === view);
+      });
+
+      // Update views
+      document.querySelectorAll('.view').forEach(v => {
+        v.classList.toggle('active', v.id === view + 'View');
+      });
+
+      // Load data
+      switch (view) {
+        case 'deals': loadDeals(); break;
+        case 'queue': loadQueue(); break;
+        case 'archive': loadArchive(); break;
+      }
+    }
+
+    // WebSocket
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}`;
+
+      connectWebSocket(wsUrl);
+    }
+
+    function connectWebSocket(url) {
+      ws = new WebSocket(url);
+
+      ws.onopen = () => {
+        updateConnectionStatus(true);
+        console.log('[WS] Connected');
+      };
+
+      ws.onclose = () => {
+        updateConnectionStatus(false);
+        console.log('[WS] Disconnected, reconnecting...');
+        wsReconnectTimeout = setTimeout(() => connectWebSocket(url), 3000);
+      };
+
+      ws.onerror = (error) => {
+        console.error('[WS] Error:', error);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleWebSocketMessage(data);
+        } catch (e) {
+          console.error('[WS] Parse error:', e);
+        }
+      };
+    }
+
+    function updateConnectionStatus(connected) {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      dot.classList.toggle('connected', connected);
+      text.textContent = connected ? 'Connected' : 'Disconnected';
+    }
+
+    function handleWebSocketMessage(data) {
+      console.log('[WS] Message:', data);
+
+      switch (data.type) {
+        case 'connected':
+          showToast('Connected to prinzclaw', 'success');
+          break;
+        case 'scan_complete':
+          showToast('Scan completed', 'success');
+          loadDeals();
+          break;
+        case 'strike_published':
+          showToast('Strike published', 'success');
+          loadQueue();
+          loadArchive();
+          break;
+        case 'strike_rejected':
+          showToast('Strike rejected', 'error');
+          loadQueue();
+          break;
+      }
+    }
+
+    // API Calls
+    async function apiCall(endpoint, options = {}) {
+      const response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'API error');
+      }
+
+      return response.json();
+    }
+
+    // Load DEAL Board
+    async function loadDeals() {
+      try {
+        const deals = await apiCall('/api/deals');
+        renderDeals(deals);
+      } catch (error) {
+        console.error('Failed to load deals:', error);
+        document.getElementById('entityList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <div>Failed to load entities</div>
+          </div>
+        `;
+      }
+    }
+
+    function renderDeals(deals) {
+      // Update stats
+      let totalKept = 0, totalBroken = 0, totalScore = 0, countWithScores = 0;
+
+      deals.forEach(deal => {
+        totalKept += deal.stats.kept;
+        totalBroken += deal.stats.broken;
+        if (deal.stats.total > 0) {
+          totalScore += deal.score;
+          countWithScores++;
+        }
+      });
+
+      document.getElementById('totalEntities').textContent = deals.length;
+      document.getElementById('totalKept').textContent = totalKept;
+      document.getElementById('totalBroken').textContent = totalBroken;
+      document.getElementById('avgScore').textContent = countWithScores > 0
+        ? Math.round(totalScore / countWithScores) + '%'
+        : '100%';
+
+      // Render entity list
+      if (deals.length === 0) {
+        document.getElementById('entityList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📋</div>
+            <div>No entities tracked yet</div>
+            <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchView('scan')">
+              Scan First Promise
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const html = deals.map(deal => {
+        const scoreClass = deal.score >= 70 ? 'high' : deal.score >= 40 ? 'medium' : 'low';
+        const initials = deal.entity.display_name
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .substring(0, 2)
+          .toUpperCase();
+
+        return `
+          <div class="entity-item" onclick="showEntityDetails('${deal.entity.id}')">
+            <div class="entity-avatar">${initials}</div>
+            <div class="entity-info">
+              <div class="entity-name">${deal.entity.display_name}</div>
+              <div class="entity-stats">
+                ${deal.stats.kept} kept · ${deal.stats.broken} broken · ${deal.stats.partiallyKept} partial · ${deal.stats.total} total
+              </div>
+            </div>
+            <div class="score-badge ${scoreClass}">${deal.score}%</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('entityList').innerHTML = html;
+    }
+
+    async function showEntityDetails(entityId) {
+      try {
+        const data = await apiCall(`/api/deals/${entityId}`);
+
+        let html = `
+          <div class="card" style="margin-top: 1rem;">
+            <div class="card-header">
+              <h3 class="card-title">${data.entity.display_name}</h3>
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <strong>Handle:</strong> @${data.entity.handle}
+            </div>
+            <div style="margin-bottom: 1rem;">
+              <strong>Stats:</strong>
+              ${data.stats.kept} kept · ${data.stats.broken} broken · ${data.stats.partiallyKept} partial
+            </div>
+            <h4 style="margin-bottom: 0.5rem;">Promises (${data.promises.length})</h4>
+            <div class="promise-list">
+              ${data.promises.map(p => `
+                <div class="promise-item">
+                  <div class="promise-text">${p.promise_text}</div>
+                  <div class="promise-meta">
+                    <span>Status: ${p.status}</span>
+                    ${p.expiry_date ? `<span>Expiry: ${p.expiry_date}</span>` : ''}
+                    ${p.verdict ? `<span>Verdict: ${p.verdict}</span>` : ''}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+
+        // Show in modal or replace content
+        const list = document.getElementById('entityList');
+        list.innerHTML = `
+          <button class="btn btn-secondary" onclick="loadDeals()" style="margin-bottom: 1rem;">
+            ← Back to DEAL Board
+          </button>
+          ${html}
+        `;
+      } catch (error) {
+        showToast('Failed to load entity details', 'error');
+      }
+    }
+
+    // Load Queue
+    async function loadQueue() {
+      try {
+        const strikes = await apiCall('/api/queue');
+
+        // Update stats
+        const stats = {
+          pending: strikes.length,
+          approved: 0,
+          rejected: 0,
+          published: 0
+        };
+
+        document.getElementById('queuePending').textContent = stats.pending;
+        document.getElementById('queueApproved').textContent = stats.approved;
+        document.getElementById('queueRejected').textContent = stats.rejected;
+        document.getElementById('queuePublished').textContent = stats.published;
+
+        // Render
+        if (strikes.length === 0) {
+          document.getElementById('queueList').innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">✓</div>
+              <div>No pending strikes</div>
+            </div>
+          `;
+          return;
+        }
+
+        const html = strikes.map(strike => `
+          <div class="strike-card">
+            <div class="strike-header">
+              <div class="strike-target">${strike.target}</div>
+              <div class="strike-verdict ${strike.verdict?.toLowerCase() || 'broke'}">
+                ${strike.verdict || 'PENDING'}
+              </div>
+            </div>
+            <div class="strike-summary">${strike.summary || 'No summary'}</div>
+            ${strike.evidence_chain ? `
+              <div class="strike-evidence">
+                ${JSON.stringify(strike.evidence_chain, null, 2)}
+              </div>
+            ` : ''}
+            <div class="strike-actions">
+              <button class="btn btn-primary" onclick="approveStrike('${strike.id}')">
+                Approve
+              </button>
+              <button class="btn btn-danger" onclick="rejectStrike('${strike.id}')">
+                Reject
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        document.getElementById('queueList').innerHTML = html;
+      } catch (error) {
+        console.error('Failed to load queue:', error);
+        document.getElementById('queueList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <div>Failed to load queue</div>
+          </div>
+        `;
+      }
+    }
+
+    async function approveStrike(id) {
+      try {
+        await apiCall(`/api/queue/${id}/approve`, {
+          method: 'POST',
+          body: JSON.stringify({ channel: 'all' }),
+        });
+        showToast('Strike approved', 'success');
+        loadQueue();
+      } catch (error) {
+        showToast('Failed to approve: ' + error.message, 'error');
+      }
+    }
+
+    async function rejectStrike(id) {
+      const reason = prompt('Reason for rejection (optional):');
+      try {
+        await apiCall(`/api/queue/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        });
+        showToast('Strike rejected', 'success');
+        loadQueue();
+      } catch (error) {
+        showToast('Failed to reject: ' + error.message, 'error');
+      }
+    }
+
+    // Load Archive
+    async function loadArchive() {
+      try {
+        const strikes = await apiCall('/api/archive');
+
+        if (strikes.length === 0) {
+          document.getElementById('archiveList').innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📦</div>
+              <div>No published strikes yet</div>
+            </div>
+          `;
+          return;
+        }
+
+        const html = strikes.map(strike => `
+          <div class="strike-card">
+            <div class="strike-header">
+              <div class="strike-target">${strike.target}</div>
+              <div class="strike-verdict ${strike.verdict?.toLowerCase() || 'broke'}">
+                ${strike.verdict || 'N/A'}
+              </div>
+            </div>
+            <div class="strike-summary">${strike.summary || 'No summary'}</div>
+            ${strike.evidence_chain ? `
+              <div class="strike-evidence">
+                ${JSON.stringify(strike.evidence_chain, null, 2)}
+              </div>
+            ` : ''}
+            <div class="promise-meta">
+              <span>Status: ${strike.status}</span>
+              <span>Created: ${new Date(strike.created_at).toLocaleDateString()}</span>
+            </div>
+          </div>
+        `).join('');
+
+        document.getElementById('archiveList').innerHTML = html;
+      } catch (error) {
+        console.error('Failed to load archive:', error);
+        document.getElementById('archiveList').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <div>Failed to load archive</div>
+          </div>
+        `;
+      }
+    }
+
+    // Scan Form
+    document.getElementById('scanForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const entityHandle = document.getElementById('entityHandle').value;
+      const entityName = document.getElementById('entityName').value;
+      const quote = document.getElementById('promiseQuote').value;
+      const sourceUrl = document.getElementById('sourceUrl').value;
+
+      try {
+        showToast('Scanning...', 'success');
+
+        const result = await apiCall('/api/scan', {
+          method: 'POST',
+          body: JSON.stringify({
+            entityHandle,
+            entityName,
+            quote,
+            sourceUrl,
+          }),
+        });
+
+        document.getElementById('scanResult').style.display = 'block';
+        document.getElementById('scanResultContent').innerHTML = `
+          <div style="margin-bottom: 1rem;">
+            <strong>Promise ID:</strong> ${result.promise_id}
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <strong>Analysis:</strong>
+            <pre style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.75rem;">${result.analysis}</pre>
+          </div>
+        `;
+
+        showToast('Scan completed', 'success');
+
+        // Clear form
+        document.getElementById('scanForm').reset();
+
+        // Switch to deals view
+        setTimeout(() => switchView('deals'), 1500);
+      } catch (error) {
+        showToast('Scan failed: ' + error.message, 'error');
+      }
+    });
+
+    // Toast
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 4000);
+    }
+  </script>
+</body>
+</html>

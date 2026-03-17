@@ -1,0 +1,36 @@
+{
+  "providers": {
+    "primary": "anthropic",
+    "anthropic": {
+      "model": "claude-sonnet-4-20250514"
+    },
+    "openai": {
+      "model": "gpt-4"
+    },
+    "deepseek": {
+      "model": "deepseek-chat"
+    },
+    "ollama": {
+      "model": "llama3",
+      "endpoint": "http://localhost:11434"
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "host": "127.0.0.1"
+  },
+  "heartbeat": {
+    "interval": 30,
+    "enabled": true
+  },
+  "workspace": "~/.prinzclaw/workspace",
+  "database": "~/.prinzclaw/prinzclaw.db",
+  "channels": {
+    "telegram": {
+      "enabled": false
+    },
+    "discord": {
+      "enabled": false
+    }
+  }
+}

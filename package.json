@@ -1,0 +1,57 @@
+{
+  "name": "prinzclaw",
+  "version": "1.0.0",
+  "description": "AI Agent that fights back - tracks promises and detects contradictions",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "bin": {
+    "prinzclaw": "./node_modules/.bin/tsx ./bin/prinzclaw"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "start": "tsx bin/prinzclaw start",
+    "scan": "tsx bin/prinzclaw scan",
+    "deals": "tsx bin/prinzclaw deals",
+    "queue": "tsx bin/prinzclaw queue",
+    "fire": "tsx bin/prinzclaw fire",
+    "archive": "tsx bin/prinzclaw archive",
+    "dev": "tsx watch src/index.ts"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "truth",
+    "accountability",
+    "openclaw"
+  ],
+  "author": "Louie Grant Prinz",
+  "license": "MIT",
+  "dependencies": {
+    "@types/ws": "^8.18.1",
+    "axios": "^1.7.9",
+    "better-sqlite3": "^11.7.0",
+    "chalk": "^5.4.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "figlet": "^1.7.0",
+    "inquirer": "^10.0.1",
+    "pnpm-store": "link:/tmp/pnpm-store",
+    "uuid": "^11.0.5",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/figlet": "^1.5.8",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.13.1",
+    "@types/uuid": "^10.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

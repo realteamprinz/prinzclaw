@@ -1,0 +1,240 @@
+#!/usr/bin/env node
+
+// prinzclaw CLI Entry Point - JavaScript version
+
+import chalk from 'chalk';
+import figlet from 'figlet';
+import inquirer from 'inquirer';
+import { createRequire } from 'module';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Import TypeScript modules using dynamic import
+async function loadPrinzclaw() {
+  const { default: Prinzclaw } = await import('../src/index.ts');
+  return Prinzclaw;
+}
+
+function printLogo() {
+  console.log(chalk.red(figlet.textSync('PRINZCLAW', { font: 'Standard' })));
+  console.log(chalk.gray('  Truth Enforcement Agent v1.0.0'));
+  console.log(chalk.gray('  "FORGED WITH PRINZCLAW"\n'));
+}
+
+async function runCommand(command, args) {
+  const Prinzclaw = await loadPrinzclaw();
+
+  switch (command) {
+    case 'setup': {
+      console.log(chalk.blue('\n⚙️  prinzclaw Setup\n'));
+      const answers = await inquirer.prompt([
+        { type: 'input', name: 'targetName', message: 'Enter target name:', default: 'Donald Trump' },
+        { type: 'input', name: 'targetHandle', message: 'Enter Twitter handle (without @):', default: 'realDonaldTrump' },
+      ]);
+      console.log(chalk.green(`\n✅ Setup complete!`));
+      console.log(chalk.gray(`   Monitoring: ${answers.targetName} (@${answers.targetHandle})`));
+      break;
+    }
+
+    case 'server':
+    case 'start': {
+      printLogo();
+      console.log(chalk.green('🔮 Starting prinzclaw...\n'));
+
+      // Import server modules
+      const { default: ConfigManager } = await import('../src/config/index.js');
+      const { default: PrinzclawDB } = await import('../src/db/index.js');
+      const { default: Brain } = await import('../src/brain/index.js');
+      const { default: Heartbeat } = await import('../src/heartbeat/index.js');
+      const Gateway = (await import('../src/gateway/index.js')).default;
+
+      // Initialize modules
+      const config = new ConfigManager();
+      config.load();
+
+      const db = new PrinzclawDB(config.getDatabase());
+
+      const brain = new Brain(config);
+      await brain.initialize();
+
+      const heartbeat = new Heartbeat(config, brain, db);
+      heartbeat.initialize();
+
+      const gateway = new Gateway(config, brain, db, heartbeat);
+
+      // Start servers
+      await gateway.start();
+      heartbeat.start();
+
+      const cfg = config.get();
+      console.log(chalk.blue('✅ Gateway initialized'));
+      console.log(chalk.blue('✅ Heartbeat initialized'));
+      console.log(chalk.blue('✅ TACO skills loaded'));
+      console.log(chalk.green(`\n🕷️  prinzclaw is running.`));
+      console.log(chalk.gray(`   Dashboard: http://${cfg.gateway.host}:${cfg.gateway.port}`));
+      console.log(chalk.gray(`   WebSocket: ws://${cfg.gateway.host}:${cfg.gateway.port}`));
+      console.log(chalk.green('\n   Press Ctrl+C to stop.\n'));
+
+      process.on('SIGINT', () => {
+        console.log(chalk.yellow('\n\n🛑 Shutting down prinzclaw...'));
+        gateway.stop();
+        heartbeat.stop();
+        db.close();
+        process.exit(0);
+      });
+
+      // Keep process alive
+      break;
+    }
+
+    case 'scan': {
+      printLogo();
+      let targetName = 'Donald Trump';
+      let targetHandle = 'realDonaldTrump';
+      let quote = '';
+      let sourceUrl = '';
+
+      for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--target' && args[i + 1]) { targetName = args[i + 1]; i++; }
+        else if (args[i] === '--handle' && args[i + 1]) { targetHandle = args[i + 1]; i++; }
+        else if (args[i] === '--url' && args[i + 1]) { sourceUrl = args[i + 1]; i++; }
+        else if (!quote) quote = args[i];
+      }
+
+      if (!quote) {
+        const answers = await inquirer.prompt([
+          { type: 'input', name: 'targetName', message: 'Target name:', default: targetName },
+          { type: 'input', name: 'quote', message: 'Quote to analyze:' },
+        ]);
+        targetName = answers.targetName;
+        quote = answers.quote;
+      }
+
+      if (!targetHandle) targetHandle = targetName.toLowerCase().replace(/\s+/g, '');
+
+      console.log(chalk.blue('\n🕷️  Running TACO Pipeline...\n'));
+      const prinzclaw = new Prinzclaw();
+      const result = await prinzclaw.runPipeline(targetHandle, targetName, quote, sourceUrl);
+
+      if (result.success) {
+        console.log(chalk.green(`\n✅ Pipeline complete!\n`));
+        console.log(chalk.gray(`   Stage: ${result.stage}`));
+        if (result.result) {
+          console.log(chalk.gray(`   Verdict: ${result.result.verdict || 'N/A'}`));
+          if (result.result.counterText) console.log(chalk.red(`\n   Strike: "${result.result.counterText}"`));
+          if (result.result.strikeId) console.log(chalk.gray(`\n   Strike ID: ${result.result.strikeId}`));
+        }
+      } else {
+        console.log(chalk.red(`\n❌ Pipeline failed: ${result.error}`));
+      }
+      prinzclaw.close();
+      break;
+    }
+
+    case 'deals': {
+      printLogo();
+      console.log(chalk.blue('\n📊 DEAL Board\n'));
+      const prinzclaw = new Prinzclaw();
+      const board = prinzclaw.getDEALBoard();
+
+      if (board.length === 0) {
+        console.log(chalk.gray('No targets configured. Run: prinzclaw setup'));
+      } else {
+        for (const entry of board) {
+          const scoreColor = entry.score >= 70 ? 'green' : entry.score >= 40 ? 'yellow' : 'red';
+          console.log(chalk.white(`\n👤 ${entry.entity.display_name}`));
+          console.log(chalk.gray(`   @${entry.entity.handle}`));
+          console.log(chalk[scoreColor](`   DEAL Score: ${entry.score}%`));
+          console.log(chalk.gray(`   Total Promises: ${entry.stats.total}`));
+        }
+      }
+      prinzclaw.close();
+      break;
+    }
+
+    case 'queue': {
+      printLogo();
+      console.log(chalk.blue('\n📋 Strike Queue\n'));
+      const prinzclaw = new Prinzclaw();
+      const pending = prinzclaw.getQueue();
+
+      if (pending.length === 0) {
+        console.log(chalk.gray('No pending strikes. Run: prinzclaw scan'));
+      } else {
+        for (const strike of pending) {
+          console.log(chalk.white(`\n🎯 ${strike.id}`));
+          console.log(chalk.gray(`   Target: ${strike.target}`));
+          console.log(chalk.red(`   Verdict: ${strike.verdict}`));
+          console.log(chalk.cyan(`   "${strike.counter_text}"`));
+        }
+        console.log(chalk.blue('\nActions:'));
+        console.log(chalk.gray('  prinzclaw fire <strike-id>  - Approve and publish'));
+      }
+      prinzclaw.close();
+      break;
+    }
+
+    case 'fire': {
+      const strikeId = args[0];
+      if (!strikeId) { console.log(chalk.red('❌ Please specify strike ID')); return; }
+      printLogo();
+      console.log(chalk.blue('\n🔥 Approving and publishing...\n'));
+      const prinzclaw = new Prinzclaw();
+      const result = await prinzclaw.approveStrike(strikeId);
+      if (result.success) console.log(chalk.green('✅ Strike approved and published!'));
+      else console.log(chalk.red(`❌ Failed: ${result.error}`));
+      prinzclaw.close();
+      break;
+    }
+
+    case 'archive': {
+      printLogo();
+      console.log(chalk.blue('\n📦 Strike Archive\n'));
+      const prinzclaw = new Prinzclaw();
+      const archive = prinzclaw.getArchive();
+      if (archive.length === 0) console.log(chalk.gray('No published strikes yet.'));
+      else {
+        for (const strike of archive) {
+          console.log(chalk.white(`\n🎯 ${strike.id}`));
+          console.log(chalk.gray(`   Target: ${strike.target}`));
+          console.log(chalk.red(`   Verdict: ${strike.verdict}`));
+        }
+      }
+      prinzclaw.close();
+      break;
+    }
+
+    case 'help':
+    default: {
+      printLogo();
+      console.log(chalk.blue('📖 Commands:\n'));
+      console.log(chalk.gray('  prinzclaw setup              Configure first target'));
+      console.log(chalk.gray('  prinzclaw start             Start Gateway + Dashboard + Heartbeat'));
+      console.log(chalk.gray('  prinzclaw scan "quote"       Analyze a statement'));
+      console.log(chalk.gray('  prinzclaw deals              View DEAL Board'));
+      console.log(chalk.gray('  prinzclaw queue              View pending strikes'));
+      console.log(chalk.gray('  prinzclaw fire <id>          Approve strike'));
+      console.log(chalk.gray('  prinzclaw archive            View published strikes'));
+      console.log(chalk.gray('  prinzclaw help               Show this help'));
+      console.log();
+    }
+  }
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const command = args[0] || 'help';
+
+  try {
+    await runCommand(command, args.slice(1));
+  } catch (error) {
+    console.error(chalk.red('\n❌ Error:'), error.message);
+    process.exit(1);
+  }
+}
+
+main();
